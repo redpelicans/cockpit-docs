@@ -58,7 +58,7 @@ async.parallel({
     res.docs.collection('folders').find({}).toArray(function(err, folders){
       if(err) throw err;
       var hfolders = _.inject(folders, function(res, folder){res[folder._id] = folder; return res}, {});
-      _.each(folders, function(folder){ if (folder.parentId) folder.parent = hfolders[folder.parentId] });
+      _.each(folders, function(folder){ if (folder.parent_id) folder.parent = hfolders[folder.parent_id] });
       data.folders = hfolders;
       debug("Loaded %d folders", folders.length);
       cb(null, data);
@@ -70,7 +70,7 @@ async.parallel({
     res.docs.collection('types').find({}).toArray(function(err, types){
       if(err) throw err;
       var htypes = _.inject(types, function(res, folder){res[folder._id] = folder; return res}, {});
-      _.each(types, function(folder){ if (folder.parentId) folder.parent = htypes[folder.parentId] });
+      _.each(types, function(folder){ if (folder.parent_id) folder.parent = htypes[folder.parent_id] });
       data.types = htypes;
       debug("Loaded %d types", types.length);
       cb(null, data);
@@ -99,15 +99,30 @@ async.parallel({
     });
   }
 
-  function pathFolders(doc, folders){
+  function pathFolders(doc, data){
     function _path(folder){
       if(!folder.parent)return "";
       return _path(folder.parent) + '/' + folder.name;
     }
-    var folder = folders[doc.folder_id];
+    if(!doc.folder_id)return "";
+    var folder = data.folders[doc.folder_id];
     if(!folder)return "";
     else return _path(folder);
   }
+
+  function pathTypes(doc, data){
+    function _path(type){
+      if(!type.parent)return "";
+      return _path(type.parent) + '/' + type.name;
+    }
+
+    if(!doc.type_id)return "";
+    var type = data.types[doc.type_id];
+    if(!type)return "";
+    else return _path(type);
+  }
+
+
 
   function pathDoc(doc){
     var type = doc.owner_type === 'HREF::Fund' ? 'Fund' : 'Partner';
@@ -121,7 +136,8 @@ async.parallel({
   }
 
   function absoluteDocPath(doc, data){
-    return path.join(pathDoc(doc), pathFolders(doc, data.folders), nameDoc(doc, data.companies));
+    var fn = doc.folder_id ? pathFolders : pathTypes;
+    return path.join(pathDoc(doc), fn(doc, data), nameDoc(doc, data.companies));
   }
 
   function extractFiles(data, cb){

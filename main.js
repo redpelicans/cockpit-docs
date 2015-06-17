@@ -102,7 +102,7 @@ async.parallel({
   function pathFolders(doc, data){
     function _path(folder){
       if(!folder.parent)return "";
-      return _path(folder.parent) + '/' + folder.name;
+      return _path(folder.parent) + '/' + (folder.name || folder.type);
     }
     if(!doc.folder_id)return "";
     var folder = data.folders[doc.folder_id];
@@ -113,7 +113,7 @@ async.parallel({
   function pathTypes(doc, data){
     function _path(type){
       if(!type.parent)return "";
-      return _path(type.parent) + '/' + type.name;
+      return _path(type.parent) + '/' + type.label;
     }
 
     if(!doc.type_id)return "";

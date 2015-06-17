@@ -124,9 +124,11 @@ async.parallel({
 
 
 
-  function pathDoc(doc){
-    var type = doc.owner_type === 'HREF::Fund' ? 'Fund' : 'Partner';
-    return path.join(argv.path, type, doc.owner_id.toString());
+  function pathDoc(doc, data){
+    var type = doc.owner_type === 'HREF::Fund' ? 'Fund' : 'Partner'
+      , id = data.companies[doc.owner_id] && data.companies[doc.owner_id]._id || doc.owner_id;
+    //return path.join(argv.path, type, doc.owner_id.toString());
+    return path.join(argv.path, type, id.toString());
   }
 
   function nameDoc(doc, companies){
@@ -137,7 +139,7 @@ async.parallel({
 
   function absoluteDocPath(doc, data){
     var fn = doc.folder_id ? pathFolders : pathTypes;
-    return path.join(pathDoc(doc), fn(doc, data), nameDoc(doc, data.companies));
+    return path.join(pathDoc(doc, data), fn(doc, data), nameDoc(doc, data.companies));
   }
 
   function extractFiles(data, cb){

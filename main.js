@@ -102,7 +102,7 @@ async.parallel({
   function pathFolders(doc, data){
     function _path(folder){
       if(!folder.parent)return "";
-      return _path(folder.parent) + '/' + (folder.name || folder.type);
+      return _path(folder.parent) + '/' + (folder.label || folder.name);
     }
     if(!doc.folder_id)return "";
     var folder = data.folders[doc.folder_id];
@@ -113,7 +113,7 @@ async.parallel({
   function pathTypes(doc, data){
     function _path(type){
       if(!type.parent)return "";
-      return _path(type.parent) + '/' + type.label;
+      return _path(type.parent) + '/' + (type.label || type.name);
     }
 
     if(!doc.type_id)return "";
@@ -131,11 +131,22 @@ async.parallel({
     return path.join(argv.path, type, id.toString());
   }
 
+
   function nameDoc(doc, companies){
     var data = doc.translations[0].parts[0]
-      , company = companies[doc.owner_id];
-    return [company && company.label || 'UnknownCompany', data.label ||  data.filename, moment(data.date).format(data.day_unknown ? 'YYYY MM' : 'YYYY MM DD')].join(" - ") + path.extname(data.filename);
+      , company = companies[doc.owner_id]
+      , name = data.filename;
+
+    if (data.name){
+      name = data.name;
+      if(data.date){
+        name += " -" + moment(data.date).format(data.day_unknown ? 'YYYY MM' : 'YYYY MM DD');
+      }
+      return [company && company.label || 'UnknownCompany', name].join(" - ") + path.extname(data.filename);
+    }
+    return [company && company.label || 'UnknownCompany', name].join(" - ");
   }
+
 
   function absoluteDocPath(doc, data){
     var fn = doc.folder_id ? pathFolders : pathTypes;
